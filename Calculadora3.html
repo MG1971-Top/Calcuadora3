@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculadora de Precios 💰</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      background: linear-gradient(to right, #e0f7fa, #ffffff);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .result {
+      font-size: 1.5rem;
+      margin-top: 20px;
+    }
+    table {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card p-4 animate__animated animate__fadeInUp mb-4" style="max-width: 600px; margin: auto;">
+    <h3 class="text-center mb-4">🧮 Calculadora de Precios para Emprendedores</h3>
+    <div class="mb-3">
+      <label for="concept" class="form-label">📝 Concepto o nombre del producto</label>
+      <input type="text" class="form-control" id="concept" placeholder="Ej. Galleta premium">
+    </div>
+    <div class="mb-3">
+      <label for="cost" class="form-label">💵 Costo base del producto ($)</label>
+      <input type="number" class="form-control" id="cost" placeholder="Ej. 100">
+    </div>
+    <div class="mb-3">
+      <label for="profit" class="form-label">📈 Porcentaje de ganancia (%)</label>
+      <input type="number" class="form-control" id="profit" placeholder="Ej. 40">
+    </div>
+    <div class="d-grid gap-2">
+      <button class="btn btn-success" onclick="calcularPrecio()">Calcular 💡</button>
+    </div>
+    <div id="resultado" class="text-center result animate__animated" style="display: none;"></div>
+  </div>
+
+  <div class="table-responsive animate__animated animate__fadeIn" id="tabla-container" style="display: none;">
+    <h4 class="text-center">📊 Historial de Cálculos</h4>
+    <table class="table table-bordered table-striped align-middle" id="tablaResultados">
+      <thead class="table-dark">
+        <tr>
+          <th>Concepto</th>
+          <th>Costo ($)</th>
+          <th>Margen de Ganancia (%)</th>
+          <th>Precio Sugerido ($)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="d-flex justify-content-center gap-3 mt-3">
+      <button class="btn btn-danger" onclick="exportarPDF()">📄 Exportar a PDF</button>
+      <button class="btn btn-primary" onclick="enviarAGoogleSheets()">📤 Enviar a Google Sheets</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const tabla = document.querySelector("#tablaResultados tbody");
+  const tablaContainer = document.getElementById("tabla-container");
+
+  function calcularPrecio() {
+    const concepto = document.getElementById("concept").value.trim();
+    const cost = parseFloat(document.getElementById('cost').value);
+    const profit = parseFloat(document.getElementById('profit').value);
+    const resultadoDiv = document.getElementById('resultado');
+
+    if (!concepto || isNaN(cost) || isNaN(profit) || cost < 0 || profit < 0) {
+      resultadoDiv.innerHTML = "⚠️ Ingresa valores válidos y un concepto.";
+      resultadoDiv.className = "text-center result animate__animated animate__shakeX text-danger";
+      resultadoDiv.style.display = "block";
+      return;
+    }
+
+    const ganancia = cost * (profit / 100);
+    const precioFinal = cost + ganancia;
+
+    resultadoDiv.innerHTML = `
+      <div class="text-success">
+        <p>💸 <strong>Precio final sugerido:</strong> $${precioFinal.toFixed(2)}</p>
+        <p>📈 <strong>Ganancia:</strong> $${ganancia.toFixed(2)}</p>
+      </div>
+    `;
+    resultadoDiv.className = "text-center result animate__animated animate__fadeInUp";
+    resultadoDiv.style.display = "block";
+
+    // Agregar a la tabla
+    const fila = document.createElement("tr");
+    fila.innerHTML = `
+      <td>${concepto}</td>
+      <td>$${cost.toFixed(2)}</td>
+      <td>${profit.toFixed(2)}%</td>
+      <td>$${precioFinal.toFixed(2)}</td>
+    `;
+    tabla.appendChild(fila);
+    tablaContainer.style.display = "block";
+  }
+
+  async function exportarPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("Historial de Precios Calculados", 10, 10);
+    let y = 20;
+    doc.setFontSize(10);
+    doc.text("Concepto      Costo ($)    Margen (%)    Precio ($)", 10, y);
+    y += 8;
+    tabla.querySelectorAll("tr").forEach(row => {
+      const cols = row.querySelectorAll("td");
+      doc.text(`${cols[0].innerText}    ${cols[1].innerText}    ${cols[2].innerText}    ${cols[3].innerText}`, 10, y);
+      y += 8;
+    });
+    doc.save("calculadora-precios.pdf");
+  }
+
+  function enviarAGoogleSheets() {
+    alert("📤 Para enviar a Google Sheets, debes vincular esta app con un Apps Script de Google.\n\nPuedo ayudarte a crear el script si lo deseas.");
+  }
+</script>
+
+</body>
+</html>
